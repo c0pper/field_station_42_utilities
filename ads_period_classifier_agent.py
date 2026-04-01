@@ -57,14 +57,18 @@ class AdsPeriodClassifierOutputSchema(BaseIOSchema):
         examples=["Q1", "Q2", "Q3", "Q4"]
     )
 
-ads_period_classifier_agent = AtomicAgent[AdsPeriodClassifierInputSchema, AdsPeriodClassifierOutputSchema](
-    config=AgentConfig(
+class AdsPeriodClassifierAgent(AtomicAgent[AdsPeriodClassifierInputSchema, AdsPeriodClassifierOutputSchema]):
+    """Atomic agent for classifying ads by fiscal quarter period."""
+
+    def __init__(self):
+        super().__init__(AgentConfig(
         client=client,
         model="qwen/qwen3.5-9b",
         history=ChatHistory(),
         system_prompt_generator=system_prompt
-    )
-)
+    ))
+
+agent = AdsPeriodClassifierAgent()
 
 if __name__ == "__main__":
     from pathlib import Path
@@ -75,7 +79,7 @@ if __name__ == "__main__":
         input_data = AdsPeriodClassifierInputSchema(
             transcription=txt_file.read_text()
         )
-        output_data = ads_period_classifier_agent.run(input_data)
+        output_data = agent.run(input_data)
 
         print(f"Input: {input_data.transcription}")
         print(f"Output: {output_data.period}")
