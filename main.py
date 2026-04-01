@@ -1,7 +1,9 @@
 from pathlib import Path
 import subprocess
 import re
+
 from shared import VIDEO_EXTS
+from merge_ads_segments import main as merge_ads_segments
 from transcribe import transcribe_video
 from rename_ads import main as rename_ads
 from organize_ads_by_quarters import main as organize_ads_by_quarters
@@ -81,12 +83,10 @@ def read_ranges(file_path: Path):
 
 
 def main(base_folder: Path, ranges_file: Path, overwrite: bool):
-    """ Merge scenes based on ranges file """
-    scene_ranges = read_ranges(ranges_file)
+    """ Merge scenes based on ranges file, transcribe ads, rename ads, organize ads by quarters """
 
     # merge scenes
-    for i, (start, end) in enumerate(scene_ranges, start=1):
-        merge_scenes(base_folder, start, end, ad_index=i, overwrite=overwrite)
+    merge_ads_segments(base_folder, ranges_file, overwrite)
     
     # transcribe ads
     for file in base_folder.iterdir():
