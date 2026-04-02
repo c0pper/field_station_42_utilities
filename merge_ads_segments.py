@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import argparse
 
@@ -28,8 +29,18 @@ def merge_scenes(base_folder: Path, start_scene: int, end_scene: int, ad_index: 
         return
 
     output_file = base_folder / f"ad_{ad_index:03d}.mp4"
+
     if output_file.exists() and not overwrite:
         print(f"[SKIP] {output_file} already exists. Use overwrite=True to replace.")
+        return
+
+    # --- SINGLE CLIP CASE ---
+    if len(clips) == 1:
+        print(f"[COPY] ad_{ad_index:03d} (single clip)")
+
+        if overwrite or not output_file.exists():
+            shutil.copy(str(clips[0]), output_file)
+
         return
 
     list_file = base_folder / f"ad_{ad_index:03d}_list.txt"

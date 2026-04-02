@@ -3,7 +3,12 @@ import shutil
 import argparse
 
 from ads_period_classifier_agent import agent as classifier, AdsPeriodClassifierOutputSchema, AdsPeriodClassifierInputSchema
-from shared import VIDEO_EXTS, find_video_by_basename
+from ads_show_classifier_agent import (
+    agent as show_classifier,
+    AdsShowClassifierOutputSchema,
+    AdsShowClassifierInputSchema,
+)
+from shared import VIDEO_EXTS, find_video_by_basename, unique_path
 
 
 def classify(text: str) -> str:
@@ -18,23 +23,20 @@ def classify(text: str) -> str:
     )
     return classification.period
 
-def unique_path(path: Path) -> Path:
-    """
-    If path exists, append _1, _2, ... before extension
-    """
-    if not path.exists():
+
+def is_show_ad(text: str) -> bool:
+    result: AdsShowClassifierOutputSchema = show_classifier.run(
+        AdsShowClassifierInputSchema(transcription=text)
+    )
+    return bool(result.is_show_ad)
+
+
+def prepend_tag_if_needed(path: Path, tag: str) -> Path:
+    """Prepend tag only if not already present"""
+    if path.name.startswith(tag):
         return path
+    return path.with_name(f"{tag}{path.name}")
 
-    base = path.stem
-    ext = path.suffix
-    parent = path.parent
-
-    i = 1
-    while True:
-        candidate = parent / f"{base}_{i}{ext}"
-        if not candidate.exists():
-            return candidate
-        i += 1
 
 def main(base_dir: Path):
     """Moves all files from base_dir to folders by quarters"""
@@ -51,14 +53,21 @@ def main(base_dir: Path):
 
         text = txt_file.read_text(encoding="utf-8")
 
-        category = classify(text)
-        if not category:
-            category = "ALL_YEAR"
+        period = classify(text)
+        if not period:
+            period = "ALL_YEAR"
 
-        target_dir = base_dir / category
+        show_ad = is_show_ad(text)
+
+        target_dir = base_dir / period
         target_dir.mkdir(exist_ok=True)
 
         target_video_path = target_dir / video_file.name
+
+        # Rename if show ad
+        if show_ad:
+            target_video_path = prepend_tag_if_needed(target_video_path, "[show_ad]_")
+
         target_video_path = unique_path(target_video_path)
 
         # Move file to target dir
@@ -66,7 +75,10 @@ def main(base_dir: Path):
         # shutil.move(str(video_file), target_video_path)
 
         # Copy file to target dir
-        print(f"[MOVE] {base_name} -> {category}/")
+        print(
+            f"[MOVE] {base_name} -> {period}/ "
+            f"{'[show_ad]' if show_ad else ''}"
+        )
         shutil.copy(str(video_file), target_video_path)
 
 

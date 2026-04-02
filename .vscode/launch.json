@@ -19,7 +19,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [
-                "/home/simo/Downloads",
+                "/home/simo/Downloads/ads",
                 "--overwrite"
             ]
         }
