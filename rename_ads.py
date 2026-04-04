@@ -63,6 +63,9 @@ def make_unique_file(base: str, folder: Path, ext: str) -> str:
 
 def main(base_dir: Path):
     txt_files = sorted(base_dir.glob("*.txt"))
+    if not txt_files:
+        print("No .txt files found")
+        return
 
     for txt_file in txt_files:
         base_name = txt_file.stem  # ad_001
@@ -72,7 +75,7 @@ def main(base_dir: Path):
             print(f"[SKIP] {base_name} (missing video)")
             continue
 
-        if not base_name.startswith("ad_"):
+        if not base_name.startswith(("ad_", "commercial_")):
             print(f"[SKIP] {base_name} (not an unrenamed ad)")
             continue
 

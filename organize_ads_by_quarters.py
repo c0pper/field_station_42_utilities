@@ -2,7 +2,11 @@ from pathlib import Path
 import shutil
 import argparse
 
-from ads_period_classifier_agent import agent as classifier, AdsPeriodClassifierOutputSchema, AdsPeriodClassifierInputSchema
+from ads_period_classifier_agent import (
+    agent as classifier,
+    AdsPeriodClassifierOutputSchema,
+    AdsPeriodClassifierInputSchema,
+)
 from ads_show_classifier_agent import (
     agent as show_classifier,
     AdsShowClassifierOutputSchema,
@@ -11,22 +15,22 @@ from ads_show_classifier_agent import (
 from shared import VIDEO_EXTS, find_video_by_basename, unique_path
 
 
-def classify(text: str) -> str:
+def classify(text: str, ad_name: str) -> str:
     """
     You plug your logic here.
-    Must return one of: Q1, Q2, Q3, Q4, general
+    Must return one of: Q1, Q2, Q3, Q4, ALL_YEAR
     """
 
     text = text.lower()
     classification: AdsPeriodClassifierOutputSchema = classifier.run(
-        AdsPeriodClassifierInputSchema(transcription=text)
+        AdsPeriodClassifierInputSchema(ad_name=ad_name, transcription=text)
     )
     return classification.period
 
 
-def is_show_ad(text: str) -> bool:
+def is_show_ad(text: str, ad_name: str) -> bool:
     result: AdsShowClassifierOutputSchema = show_classifier.run(
-        AdsShowClassifierInputSchema(transcription=text)
+        AdsShowClassifierInputSchema(ad_name=ad_name, transcription=text)
     )
     return bool(result.is_show_ad)
 
@@ -53,11 +57,11 @@ def main(base_dir: Path):
 
         text = txt_file.read_text(encoding="utf-8")
 
-        period = classify(text)
+        period = classify(text, base_name)
         if not period:
             period = "ALL_YEAR"
 
-        show_ad = is_show_ad(text)
+        show_ad = is_show_ad(text, base_name)
 
         target_dir = base_dir / period
         target_dir.mkdir(exist_ok=True)
@@ -71,21 +75,16 @@ def main(base_dir: Path):
         target_video_path = unique_path(target_video_path)
 
         # Move file to target dir
-        # print(f"[MOVE] {base_name} -> {category}/")
-        # shutil.move(str(video_file), target_video_path)
-
-        # Copy file to target dir
-        print(
-            f"[MOVE] {base_name} -> {period}/ "
-            f"{'[show_ad]' if show_ad else ''}"
-        )
-        shutil.copy(str(video_file), target_video_path)
+        print(f"[MOVE] {base_name} -> {period}/ {'[show_ad]' if show_ad else ''}")
+        shutil.move(str(video_file), target_video_path)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("base_dir", nargs="?", default=".")
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing merged files")
+    parser.add_argument(
+        "--overwrite", action="store_true", help="Overwrite existing merged files"
+    )
     args = parser.parse_args()
 
     main(Path(args.base_dir).resolve())

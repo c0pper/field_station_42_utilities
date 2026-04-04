@@ -8,7 +8,7 @@ from atomic_agents.context import ChatHistory, SystemPromptGenerator
 
 client = instructor.from_openai(
     OpenAI(base_url="http://127.0.0.1:1234/v1", api_key="ollama"),
-    mode=instructor.Mode.JSON_SCHEMA
+    mode=instructor.Mode.JSON_SCHEMA,
 )
 
 
@@ -22,6 +22,8 @@ system_prompt = SystemPromptGenerator(
         "Your task is to determine whether an advertisement is promoting a TV show, channel content, or programming.",
     ],
     steps=[
+        "Read and analyze the ad name provided as context.",
+        "Extract any hints from the ad name about the content type.",
         "Read and analyze the ad transcription provided by the user.",
         "Determine if the content is promoting a TV show, episode, program, or channel content.",
         "Look for indicators such as:",
@@ -38,8 +40,8 @@ system_prompt = SystemPromptGenerator(
         "Return ONLY a boolean value:",
         "- true → if it is a TV show/channel promotion",
         "- false → if it is a regular commercial ad",
-        "Be strict: only return true when clearly a show promo."
-    ]
+        "Be strict: only return true when clearly a show promo.",
+    ],
 )
 
 
@@ -47,20 +49,26 @@ system_prompt = SystemPromptGenerator(
 # SCHEMAS
 # -------------------------
 
+
 class AdsShowClassifierInputSchema(BaseIOSchema):
     """Input schema for show ad classification."""
-    transcription: str = Field(
+
+    ad_name: str = Field(
         ...,
-        description="The transcription text of the advertisement"
+        description="The original filename of the advertisement (without extension), e.g. ad_001 or coca_cola_christmas",
+    )
+    transcription: str = Field(
+        ..., description="The transcription text of the advertisement"
     )
 
 
 class AdsShowClassifierOutputSchema(BaseIOSchema):
     """Output schema for show ad classification."""
+
     is_show_ad: bool = Field(
         ...,
         description="True if the ad promotes a TV show or channel programming, False otherwise",
-        examples=[True, False]
+        examples=[True, False],
     )
 
 
@@ -68,16 +76,19 @@ class AdsShowClassifierOutputSchema(BaseIOSchema):
 # AGENT
 # -------------------------
 
+
 class AdsShowClassifierAgent(
     AtomicAgent[AdsShowClassifierInputSchema, AdsShowClassifierOutputSchema]
 ):
     def __init__(self):
-        super().__init__(AgentConfig(
-            client=client,
-            model="qwen/qwen3.5-9b",
-            history=ChatHistory(),
-            system_prompt_generator=system_prompt
-        ))
+        super().__init__(
+            AgentConfig(
+                client=client,
+                model="qwen/qwen3.5-9b",
+                history=ChatHistory(),
+                system_prompt_generator=system_prompt,
+            )
+        )
 
 
 agent = AdsShowClassifierAgent()
@@ -96,7 +107,7 @@ if __name__ == "__main__":
         print(f"Processing {txt_file}")
 
         input_data = AdsShowClassifierInputSchema(
-            transcription=txt_file.read_text()
+            ad_name=txt_file.stem, transcription=txt_file.read_text()
         )
 
         output_data = agent.run(input_data)
