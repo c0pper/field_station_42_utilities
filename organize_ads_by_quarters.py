@@ -74,9 +74,14 @@ def main(base_dir: Path):
 
         target_video_path = unique_path(target_video_path)
 
-        # Move file to target dir
         print(f"[MOVE] {base_name} -> {period}/ {'[show_ad]' if show_ad else ''}")
         shutil.move(str(video_file), target_video_path)
+
+        target_txt_path = target_dir / txt_file.name
+        if show_ad:
+            target_txt_path = prepend_tag_if_needed(target_txt_path, "[show_ad]_")
+        target_txt_path = unique_path(target_txt_path)
+        shutil.move(str(txt_file), target_txt_path)
 
 
 if __name__ == "__main__":
