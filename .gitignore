@@ -10,3 +10,6 @@ wheels/
 .venv
 .cache
 models
+
+# Environment variables (secrets)
+.env

@@ -6,9 +6,10 @@ import instructor
 from openai import OpenAI
 from atomic_agents import AtomicAgent, AgentConfig, BasicChatInputSchema, BaseIOSchema
 from atomic_agents.context import ChatHistory, SystemPromptGenerator
+from config import OPENAI_BASE_URL, OPENAI_API_KEY, OPENAI_MODEL, MODEL_API_PARAMETERS
 
 client = instructor.from_openai(
-    OpenAI(base_url="http://127.0.0.1:1234/v1", api_key="ollama"),
+    OpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY),
     mode=instructor.Mode.JSON_SCHEMA,
 )
 
@@ -81,9 +82,10 @@ class AdsPeriodClassifierAgent(
         super().__init__(
             AgentConfig(
                 client=client,
-                model="qwen/qwen3.5-9b",
+                model=OPENAI_MODEL,
                 history=ChatHistory(),
                 system_prompt_generator=system_prompt,
+                model_api_parameters=MODEL_API_PARAMETERS,
             )
         )
 

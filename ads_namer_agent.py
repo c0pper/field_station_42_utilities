@@ -4,10 +4,11 @@ import instructor
 from openai import OpenAI
 from atomic_agents import AtomicAgent, AgentConfig, BaseIOSchema
 from atomic_agents.context import ChatHistory, SystemPromptGenerator
+from config import OPENAI_BASE_URL, OPENAI_API_KEY, OPENAI_MODEL, MODEL_API_PARAMETERS
 
 
 client = instructor.from_openai(
-    OpenAI(base_url="http://127.0.0.1:1234/v1", api_key="ollama"),
+    OpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY),
     mode=instructor.Mode.JSON_SCHEMA
 )
 
@@ -67,9 +68,11 @@ class AdsNamingAgent(AtomicAgent[AdsNamingInputSchema, AdsNamingOutputSchema]):
     def __init__(self):
         super().__init__(AgentConfig(
             client=client,
-            model="qwen/qwen3.5-9b",
+            # model="qwen/qwen3.5-9b",
+            model=OPENAI_MODEL,
             history=ChatHistory(),
-            system_prompt_generator=system_prompt
+            system_prompt_generator=system_prompt,
+            model_api_parameters=MODEL_API_PARAMETERS,
         ))
 
 
@@ -78,13 +81,15 @@ agent = AdsNamingAgent()
 if __name__ == "__main__":
     from pathlib import Path
 
-    txt_files = Path("/home/simo/Downloads").glob("**/*.txt")
+    txt_files = Path("/mnt/media_library/Other/MtvCommercials").glob("**/*.txt")
 
     for txt_file in txt_files:
         print(f"Processing {txt_file}")
+        text = txt_file.read_text()
+        print(f"Transcription: {text}")
 
         input_data = AdsNamingInputSchema(
-            transcription=txt_file.read_text()
+            transcription=text
         )
 
         output_data = agent.run(input_data)
