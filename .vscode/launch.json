@@ -22,6 +22,27 @@
                 "/home/simo/Downloads/ads",
                 "--overwrite"
             ]
+        },
+        {
+            "name": "MusicVideos: Create NFOs",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/create_music_video_nfo.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--dry-run"
+            ]
+        },
+        {
+            "name": "MusicVideos: Link NFOs to MTV/shows",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/create_music_video_nfo.py",
+            "console": "integratedTerminal",
+            "args": [
+                "link-mtv",
+                // "--dry-run"
+            ]
         }
     ]
 }
